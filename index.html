@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Culés AI - Powered by Zennv</title>
+    <!-- Library untuk merapikan text bintang (Markdown) dari AI -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body { 
+            background-color: #06090e; 
+            color: #f5f6f9; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .chat-container { 
+            width: 100vw; 
+            height: 100vh; 
+            background: radial-gradient(circle at top right, #13112c, #07090e);
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+        }
+        
+        /* Header tetap diam di atas */
+        .chat-header { 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            padding: 18px 20px; 
+            background: linear-gradient(135deg, rgba(16, 29, 66, 0.95) 0%, rgba(58, 12, 35, 0.95) 100%);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            z-index: 100;
+        }
+        
+        .header-info { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .header-title { 
+            font-size: 1.25rem; 
+            font-weight: 700; 
+            color: #ffffff; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-subtitle { 
+            font-size: 0.75rem; 
+            color: #a0a5b5; 
+            margin-top: 3px; 
+            font-weight: 500;
+        }
+
+        .dev-badge {
+            font-size: 0.7rem;
+            color: #ffdd57;
+            background: rgba(255, 221, 87, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 221, 87, 0.2);
+            margin-left: 6px;
+            font-weight: bold;
+        }
+        
+        .status-badge { 
+            background: rgba(0, 230, 118, 0.15); 
+            color: #00e676; 
+            padding: 6px 14px; 
+            border-radius: 30px; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            border: 1px solid rgba(0, 230, 118, 0.25); 
+            letter-spacing: 0.3px;
+        }
+        
+        /* Area khusus scroll chat */
+        .chat-messages { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 18px;
+            scroll-behavior: smooth;
+            /* Memberikan ruang kosong agar chat tidak tertutup oleh header dan footer inputan */
+            padding-top: 90px;
+            padding-bottom: 100px;
+            height: 100vh;
+        }
+        
+        .welcome-screen { 
+            text-align: center; 
+            margin: auto; 
+            max-width: 85%; 
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .welcome-screen .logo-ai {
+            font-size: 3.5rem;
+            margin-bottom: 12px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .welcome-screen h3 { 
+            color: #ffffff; 
+            font-size: 1.5rem;
+            margin-bottom: 8px; 
+            font-weight: 700;
+        }
+        
+        .welcome-screen p {
+            color: #949aab;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .welcome-screen .credits {
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #626875;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 12px;
+        }
+        
+        .message { 
+            max-width: 85%; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 4px; 
+            animation: slideUp 0.35s cubic-bezier(0.1, 0.8, 0.2, 1); 
+        }
+        
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(16px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        .message.user { align-self: flex-end; }
+        .message.bot { align-self: flex-start; }
+        
+        .message-content { 
+            padding: 14px 18px; 
+            border-radius: 20px; 
+            font-size: 0.95rem; 
+            line-height: 1.6; 
+            word-break: break-word; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .message-content p { margin-bottom: 10px; }
+        .message-content p:last-child { margin-bottom: 0; }
+        .message-content strong { color: #ffffff; font-weight: 600; }
+        .message-content ul, .message-content ol { margin-left: 20px; margin-bottom: 10px; }
+        
+        .message.user .message-content { 
+            background: linear-gradient(135deg, #0066ff 0%, #0044cc 100%); 
+            color: #ffffff; 
+            border-bottom-right-radius: 4px; 
+        }
+        
+        .message.bot .message-content { 
+            background-color: #161b26; 
+            color: #e3e7f0; 
+            border-bottom-left-radius: 4px; 
+            border: 1px solid rgba(255, 255, 255, 0.06); 
+        }
+        
+        .message-meta { 
+            font-size: 0.7rem; 
+            color: #555d6e; 
+            margin: 0 4px;
+        }
+        
+        /* TAKTIK CHATGPT: Menu Ketik dikunci mutlak di posisi paling bawah layar */
+        .chat-input-area { 
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            padding: 16px; 
+            background: linear-gradient(180deg, rgba(9, 13, 20, 0) 0%, #090d14 25%);
+            display: flex; 
+            gap: 12px; 
+            align-items: center;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            z-index: 100;
+        }
+        
+        .input-wrapper { flex: 1; }
+        
+        .chat-input-area input { 
+            width: 100%; 
+            background-color: #141924; 
+            border: 1px solid rgba(255, 255, 255, 0.12); 
+            border-radius: 26px; 
+            padding: 14px 22px; 
+            color: #ffffff; 
+            font-size: 0.95rem; 
+            outline: none; 
+            transition: all 0.3s; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        
+        .chat-input-area input:focus { 
+            border-color: #0066ff; 
+            background-color: #171d2a;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15), 0 4px 12px rgba(0,0,0,0.4);
+        }
+        
+        .send-btn { 
+            background: linear-gradient(135deg, #ff0055 0%, #b3003b 100%); 
+            border: none; 
+            width: 48px; 
+            height: 48px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            color: #ffffff; 
+            font-size: 1.1rem; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 12px rgba(255, 0, 85, 0.3);
+            flex-shrink: 0;
+        }
+        
+        .send-btn:active { 
+            transform: scale(0.92);
+        }
+        
+        .typing-indicator { 
+            display: flex; 
+            gap: 5px; 
+            padding: 14px 20px; 
+            background-color: #161b26; 
+            border-radius: 20px; 
+            align-self: flex-start; 
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.06); 
+        }
+        
+        .typing-indicator span { 
+            width: 7px; 
+            height: 7px; 
+            background-color: #a0a5b5; 
+            border-radius: 50%; 
+            animation: blink 1.4s infinite both; 
+        }
+        
+        .typing-indicator span:nth-child(2) { animation-delay: .2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: .4s; }
+        @keyframes blink { 0% { opacity: .2; } 20% { opacity: 1; } 100% { opacity: .2; } }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <!-- Header Utama -->
+        <div class="chat-header">
+            <div class="header-info">
+                <div class="header-title">🏆 Culés AI <span class="dev-badge">Zennv</span></div>
+                <div class="header-subtitle">Més que un club • Supporter Fanatik Barça</div>
+            </div>
+            <div class="status-badge">● Online</div>
+        </div>
+
+        <!-- Ruang Percakapan -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-screen" id="welcomeScreen">
+                <span class="logo-ai">🔵🔴</span>
+                <h3>¡Hola Culés!</h3>
+                <p>Selamat datang di ruang taktik Barcelona. Tanya seputar sejarah, pemain, rivalitas, atau filosofi Tiki-Taka ke Culés AI.</p>
+                <div class="credits">Developed elegantly by Zennv</div>
+            </div>
+        </div>
+
+        <!-- Input Chat -->
+        <div class="chat-input-area">
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="Ketik pesan ke Culés AI..." onkeypress="handleKeyPress(event)">
+            </div>
+            <button class="send-btn" onclick="sendMessage()">➔</button>
+        </div>
+    </div>
+
+    <!-- Panggil File Logika Javascript -->
+    <script src="script.js"></script>
+</body>
+</html>
